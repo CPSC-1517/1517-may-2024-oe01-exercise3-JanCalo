@@ -99,7 +99,7 @@ namespace BookSystem
         #region Methods
         public override string ToString()
         {
-            return $"{ISBN},{Reviewer},{Rating},{Comment}";
+            return $"{ISBN}, {Title}, {Author}, {Reviewer},{Rating},{Comment}";
         }
 
         public static Review Parse(string item)

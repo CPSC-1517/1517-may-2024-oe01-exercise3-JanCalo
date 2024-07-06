@@ -1,7 +1,6 @@
 ﻿@page "/ReviewCollection"
-@using MudBlazor
-@using BookSystem
 @using System.Text.RegularExpressions
+
 @inject IJSRuntime JSRuntime
 @inject IDialogService DialogService
 
@@ -38,9 +37,12 @@
                                 @bind-Value="@author"
                                Required
                                 RequiredError="Author is required.">
-                         @foreach (var author in authorList)
+                         @if (authorList != null)
                         {
-                            <MudSelectItem Value="@author">@author</MudSelectItem>
+                            @foreach (var author in authorList)
+                            {
+                                <MudSelectItem Value="@author">@author</MudSelectItem>
+                            }
                         }
                     </MudSelect>
                 </MudCardContent>
@@ -126,17 +128,18 @@
     {
         authorList = new List<string>
         {
-            "Karen Miller",
-          "Robert A. Heinlein",
-            "Neal Stephenson",  "Philip K. Dick",
-            "Adrian Tchaikovsky",
-            "Isaac Asimov",
-            "Frank Herbert",
-            "Jules Verne",
-            "Margaret Atwood",
-            "H.G. Wells",
-            "Arthur C. Clarke",
-            "Cixin Liu",
+             "J.K. Rowling", 
+             "George R.R. Martin", 
+             "Neil Gaiman", 
+             "Suzanne Collins", 
+             "Isaac Asimov", 
+             "Margaret Atwood", 
+             "Frank Herbert",
+             "Cixin Liu", 
+             "Stephen King",
+             "Rick Riordan", 
+             "Andy Weir", 
+             "Octavia Butler", 
         };
 
         base.OnInitialized();
@@ -159,7 +162,7 @@
             }
 
             review = new Review(isbn, title, author, reviewer, rating, comment);
-            string csvPath = "wwwroot/data/GoodData.csv";
+            string csvPath = "wwwroot/Data/GoodData.csv";
             await SaveReview(review, csvPath);
             successMessage = "Review saved successfully!";
         }
