@@ -1,0 +1,199 @@
+﻿@page "/ReviewCollection"
+@using MudBlazor
+@using BookSystem
+@using System.Text.RegularExpressions
+@inject IJSRuntime JSRuntime
+@inject IDialogService DialogService
+
+<PageTitle>Review Collection</PageTitle>
+
+<MudText Typo="Typo.h3">Add Review</MudText>
+
+<MudText Typo="Typo.body1">Use this form to add a review.</MudText>
+
+<MudForm Class="mt-8" @ref="form" @bind-Errors="errors">
+    <MudGrid>
+        <MudItem xs="12" sm="6">
+            <MudCard Outlined="true">
+                <MudCardHeader>
+                    <MudText Typo="Typo.h6">Book Info</MudText>
+                </MudCardHeader>
+                <MudCardContent>
+                    <MudTextField Variant="Variant.Outlined"
+                                  T="string"
+                                  Label="ISBN"
+                                  @bind-Value="@isbn"
+                                  Immediate="true"
+                                    Required
+                                   RequiredError="ISBN is required." />
+                     <MudTextField Variant="Variant.Outlined"
+                                   T="string"
+                                   Label="Title"
+                                   @bind-Value="@title"
+                                   Immediate="true"
+                                    Required
+                                   RequiredError="Title is required." />
+                     <MudSelect Label="Author"
+                                Variant="Variant.Outlined"
+                                @bind-Value="@author"
+                               Required
+                                RequiredError="Author is required.">
+                         @foreach (var author in authorList)
+                        {
+                            <MudSelectItem Value="@author">@author</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+        <MudItem xs="12" sm="6">
+            <MudCard Outlined="true">
+                <MudCardHeader>
+                    <MudText Typo="Typo.h6">Review Info</MudText>
+                </MudCardHeader>
+                <MudCardContent>
+                    <MudTextField Variant="Variant.Outlined"
+                                  T="string"
+                                  Label="Reviewer"
+                                  @bind-Value="@reviewer"
+                                  Immediate="true"
+                                    Required
+                                   RequiredError="Reviewer is required." />
+                     <MudSelect Label="Rating"
+                                Variant="Variant.Outlined"
+                                @bind-Value="@rating"
+                               Required
+                                RequiredError="Rating is required.">
+                         @foreach (var rating in Enum.GetValues(typeof(RatingType)).Cast<RatingType>())
+                        {
+                            <MudSelectItem Value="@rating">@rating</MudSelectItem>
+                        }
+                    </MudSelect>
+                    <MudTextField Variant="Variant.Outlined"
+                                  T="string"
+                                  Label="Comment"
+                                  Multiline="true"
+                                  Rows="4"
+                                  @bind-Value="@comment"
+                                  Immediate="true"
+                                    Required
+                                   RequiredError="Comment is required." />
+                 </MudCardContent>
+             </MudCard>
+         </MudItem>
+         <MudItem xs="12">
+             <MudPaper Class="d-flex flex-wrap justify-center" Elevation="0">
+                 <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="ValidateAndSaveReview">Add Review</MudButton>
+                 <MudSpacer />
+                 <MudButton Variant="Variant.Filled" Color="Color.Warning" OnClick="ClearForm">Clear</MudButton>
+                 <MudSpacer />
+                 <MudButton Variant="Variant.Filled" Color="Color.Secondary" Href="/ReviewReport">Go to Report</MudButton>
+             </MudPaper>
+         </MudItem>
+     </MudGrid>
+ </MudForm>
+
+ <MudPaper Class="pt-4" Elevation="0">
+     @if (!string.IsNullOrWhiteSpace(successMessage))
+    {
+        <MudText Typo="Typo.body2" Color="Color.Success">@successMessage</MudText>
+    }
+    @foreach (var error in errors)
+    {
+        <MudText Typo="Typo.body2" Color="Color.Error">@error</MudText>
+    }
+    @foreach (var error in errorMessages)
+    {
+        <MudText Typo="Typo.body2" Color="Color.Error">@error</MudText>
+    }
+    </MudPaper>
+
+    @code {
+    private List<string> authorList = new List<string>();
+    private string isbn;
+    private string title;
+    private string author;
+    private string reviewer;
+    private string comment;
+    private RatingType rating;
+    private Review review;
+    private MudForm form;
+    private List<string> errorMessages = new List<string>();
+    private string[] errors = { };
+    private string successMessage = string.Empty;
+
+    protected override void OnInitialized()
+    {
+        authorList = new List<string>
+        {
+            "Karen Miller",
+          "Robert A. Heinlein",
+            "Neal Stephenson",  "Philip K. Dick",
+            "Adrian Tchaikovsky",
+            "Isaac Asimov",
+            "Frank Herbert",
+            "Jules Verne",
+            "Margaret Atwood",
+            "H.G. Wells",
+            "Arthur C. Clarke",
+            "Cixin Liu",
+        };
+
+        base.OnInitialized();
+    }
+
+    private async Task ValidateAndSaveReview()
+    {
+        form.Validate();
+        try
+        {
+            if (!form.IsValid)
+            {
+                return;
+            }
+
+            if (!IsValidIsbn(isbn))
+            {
+                errors = new string[] { "ISBN format is invalid. It should be in the format ###-#-###-#####-#." };
+                return;
+            }
+
+            review = new Review(isbn, title, author, reviewer, rating, comment);
+            string csvPath = "wwwroot/data/GoodData.csv";
+            await SaveReview(review, csvPath);
+            successMessage = "Review saved successfully!";
+        }
+        catch (ArgumentException ex)
+        {
+            errors = new string[] { ex.Message };
+        }
+        catch (Exception)
+        {
+            errors = new string[] { "An error occurred while saving the review." };
+        }
+    }
+
+    private async Task SaveReview(Review review, string csvPath)
+    {
+        string line = $"{review}\n";
+        await File.AppendAllTextAsync(csvPath, line);
+    }
+
+    private bool IsValidIsbn(string isbn)
+    {
+        string pattern = @"^\d{3}-\d-\d{3}-\d{5}-\d$";
+        return Regex.IsMatch(isbn, pattern);
+    }
+
+    private async Task ClearForm()
+    {
+        bool? result = await DialogService.ShowMessageBox("Confirm Clear", "Clearing will lose any unsaved data. Are you sure you want to clear the form?", yesText: "Clear Form", cancelText: "No don't!", noText: "Really don't Clear!");
+
+        if (result != null && result == true)
+        {
+            await form.ResetAsync();
+            errors = new string[] { };
+            successMessage = string.Empty;
+        }
+    }
+}
