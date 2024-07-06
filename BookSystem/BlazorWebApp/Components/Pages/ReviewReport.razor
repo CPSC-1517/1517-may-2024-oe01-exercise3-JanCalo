@@ -1,0 +1,137 @@
+﻿@page "/reviewreport"
+@using BookSystem
+@using System.IO
+@using System.Collections.Generic
+@using System.Threading.Tasks
+
+<PageTitle>Review Report</PageTitle>
+<MudText Typo="Typo.h3">Review Report</MudText>
+
+@if (errorMessages.Count > 0)
+
+{
+
+    <div class="alert alert-danger">
+        <MudText Typo="Typo.h6">Please fix the following issues:</MudText>
+        <ul>
+
+            @foreach (var error in errorMessages)
+
+            {
+
+                <li>@error</li>
+
+            }
+        </ul>
+    </div>
+}
+
+@if (reviews == null)
+
+{
+    <div>Loading...</div>
+}
+
+else if (reviews.Count == 0)
+{
+    <div>No reviews found.</div>
+
+}
+else
+{
+    <MudTable Items="@reviews">
+
+        <HeaderContent>
+            <MudTh>ISBN</MudTh>
+            <MudTh>Title</MudTh>
+            <MudTh>Author</MudTh>
+            <MudTh>Reviewer</MudTh>
+            <MudTh>Rating</MudTh>
+            <MudTh>Comment</MudTh>
+        </HeaderContent>
+
+        <RowTemplate>
+
+            <MudTd>@context.ISBN</MudTd>
+                <MudTd>@context.Title</MudTd>
+                <MudTd>@context.Author</MudTd>
+                <MudTd>@context.Reviewer</MudTd>
+                <MudTd>@context.Rating</MudTd>
+                <MudTd>@context.Comment</MudTd>
+            </RowTemplate>
+
+        </MudTable>
+
+}
+
+@code {
+
+    private List<Review> reviews = new List<Review>();
+
+    private List<string> errorMessages = new List<string>();
+
+    protected override async Task OnInitializedAsync()
+
+    {
+
+        await LoadReviews();
+
+    }
+
+    private async Task LoadReviews()
+
+    {
+        string csvFilePath = "wwwroot/Data/GoodData.csv";
+        try
+        {
+            string[] reviewData = await File.ReadAllLinesAsync(csvFilePath);
+            reviews.Clear();
+            foreach (string line in reviewData)
+            {
+                try
+                {
+                    reviews.Add(Review.Parse(line));
+                }
+                catch (FormatException ex)
+                {
+                    errorMessages.Add($"Format Error: {line}: {GetInnerException(ex).Message}");
+                }
+
+                catch (ArgumentNullException ex)
+                {
+
+                    errorMessages.Add($"Null Error: {line}: {GetInnerException(ex).Message}");
+
+                }
+                catch (ArgumentException ex)
+                {
+
+                    errorMessages.Add($"Argument Error: {line}: {GetInnerException(ex).Message}");
+
+                }
+                catch (Exception ex)
+                {
+
+                    errorMessages.Add($"Record Error: {line}: {GetInnerException(ex).Message}");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessages.Add($"File Error: {GetInnerException(ex).Message}");
+        }
+
+    }
+    private Exception GetInnerException(Exception ex)
+    {
+        while (ex.InnerException != null)
+
+            ex = ex.InnerException;
+
+        return ex;
+    }
+
+}
+
+
+

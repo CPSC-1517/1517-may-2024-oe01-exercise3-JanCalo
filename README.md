@@ -1,3 +1,4 @@
+[![Review Assignment Due Date](https://classroom.github.com/assets/deadline-readme-button-22041afd0340ce965d47ae6ef1cefeee28c7c493a6346c4f15d667ab976d596c.svg)](https://classroom.github.com/a/EmKQ40f4)
 # CPSC1517-1222 Exercise 3
 
 > This exercise is part of a series of exercises to manage information on a collection of book reviews. In this exercise you will create a Blazor web application project. BookReview is a site to keep up-to-date with your book reviews.
